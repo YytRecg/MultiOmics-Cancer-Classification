@@ -1,0 +1,156 @@
+---
+title: "PCA"
+output: html_document
+date: '2022-08-03'
+---
+
+Step 1: Load cleaned TCGA data.
+```{r}
+# Data loading
+library(haven)
+
+NT <- read_sav("/Users/yutingyang/Downloads/Cancer Research/PCA in R/data_cleaned_NT3.sav")   # Load normal samples
+TP <- read_sav("/Users/yutingyang/Downloads/Cancer Research/PCA in R/data_cleaned_TP3(1).sav")   # Load tumor samples
+```
+
+Step 2: Combine and label normal and tumor samples.
+```{r}
+#Data processing
+M <- merge(NT, TP) #merge data
+
+#create label list
+#NT part
+NT1<-NT[-c(1:3)]
+#create a list of zero
+label_list<-c()
+for (i in 1:ncol(NT)) {
+label_list<-append(label_list,0)
+}
+#TP part
+TP1<-TP[-c(1:3)]
+for (i in 1:ncol(TP1)) {
+label_list<-append(label_list,1)
+}
+
+#bind label list to data
+MWithLabel<-rbind(M,label_list)
+
+#concat attribute names and set the row names
+MWithLabel$Attributes = paste(MWithLabel$Des.GeneSymbol, MWithLabel$Des.Platform)
+row.names(MWithLabel)=MWithLabel$Attributes
+```
+
+Testing step (select only Copy Number rows)
+```{r}
+# Select Copy Number rows
+#select copy number rows
+MWithLabelCN = MWithLabel[union(which(MWithLabel$Des.Platform=='copyNumber'), which(MWithLabel$Des.Platform=='0')),]
+
+#remove non numeric columns (first 3 description cols)
+MnumCN<-MWithLabelCN[-c(1:3)]
+
+#remove last col of attributes' names
+Mnum2CN<-MnumCN[1:(length(MnumCN)-1)]
+
+#transpose
+MtCN<-t(Mnum2CN)
+MfCN<-as.data.frame(MtCN)
+
+write.csv(MfCN,"/Users/yutingyang/Downloads/Prof.Mirzaei/PCA in R/finalDataCopyNumber.csv", row.names = TRUE)
+```
+
+Testing step (select only Gene Expression rows)
+```{r}
+# Select Gene Expression rows
+#select geneExp rows
+MWithLabelGE = MWithLabel[union(which(MWithLabel$Des.Platform=='geneExp'), which(MWithLabel$Des.Platform=='0')),]
+
+#remove non numeric columns (first 3 description cols)
+MnumGE<-MWithLabelGE[-c(1:3)]
+
+#remove last col of attributes' names
+Mnum2GE<-MnumGE[1:(length(MnumGE)-1)]
+
+#transpose
+MtGE<-t(Mnum2GE)
+MfGE<-as.data.frame(MtGE)
+
+write.csv(MfGE,"/Users/yutingyang/Downloads/Prof.Mirzaei/PCA in R/finalDataGeneExpr.csv", row.names = TRUE)
+```
+
+Testing step (select only Methylation rows )
+```{r}
+# Select methylation rows
+#select methylation rows
+MWithLabelML = MWithLabel[union(which(MWithLabel$Des.Platform=='methylation'), which(MWithLabel$Des.Platform=='0')),]
+
+#remove non numeric columns (first 3 description cols)
+MnumML<-MWithLabelML[-c(1:3)]
+
+#remove last col of attributes' names
+Mnum2ML<-MnumML[1:(length(MnumML)-1)]
+
+#transpose
+MtML<-t(Mnum2ML)
+MfML<-as.data.frame(MtML)
+
+write.csv(MfML,"/Users/yutingyang/Downloads/Prof.Mirzaei/PCA in R/finalDataMethylation.csv", row.names = TRUE)
+```
+
+Step 3: Preprocess dataset for PCA
+```{r}
+#remove non numeric columns (first 3 description cols)
+Mnum<-MWithLabel[-c(1:3)]
+
+#remove last col of attributes' names
+Mnum2<-Mnum[1:(length(Mnum)-1)]
+
+#transpose
+Mt<-t(Mnum2)
+Mf<-as.data.frame(Mt)
+
+#which(apply(Mf, 2, var) == 0)
+#remove zero/constant cols (which(apply(Mf, 2, var)==0))
+Mclear<-Mf[ , which(apply(Mf, 2, var) != 0)]
+
+#write.csv(Mf,"/Users/yutingyang/Downloads/Prof.Mirzaei/PCA in R/finalData.csv", row.names = TRUE)
+```
+
+Step 4: Applying PCA
+```{r}
+#PCA
+M.pca <- prcomp(Mclear, center = T, scale. = T)
+summary(M.pca)
+
+#pr <- prcomp(USArrests, scale = TRUE)
+#vars <- apply(M.pca$x, 2, var)  
+#props <- vars / sum(vars)
+#cumsum(props)
+```
+Step 5: Visualize results
+```{r}
+library(factoextra)
+fviz_eig(M.pca)
+
+var <- get_pca_var(M.pca)
+ind <- get_pca_ind(M.pca)
+ii <- ind$coord
+Mreduced <- as.data.frame(ii)
+```
+
+Step 6: Save dataset after PCA
+```{r}
+#create a list of zero
+label_list2<-c()
+for (i in 1:ncol(NT1)) {
+label_list2<-append(label_list2,0)
+}
+for (i in 1:ncol(TP1)) {
+label_list2<-append(label_list2,1)
+}
+label_list2 = as.data.frame(label_list2)
+#bind label list to data
+MreducedWLabel<-cbind(Mreduced,label_list2)
+
+write.csv(MreducedWLabel,"/Users/yutingyang/Downloads/Cancer Research/PCA in R/finalDataReduced.csv", row.names = TRUE)
+```

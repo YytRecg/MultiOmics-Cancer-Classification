@@ -1,0 +1,86 @@
+---
+title: "Undersampling"
+output: html_document
+date: '2022-11-18'
+---
+
+```{r}
+# Load your dataset into a data frame (replace "your_dataset.csv" with the actual file name or URL of your dataset)
+data_df <- read.csv("your_dataset.csv")
+
+# Load the themis package
+library(themis)
+
+# Load your high-dimensional data into a data frame (assuming it's named 'data_df')
+
+# Create an 'ImputedData' object from the data frame
+imputed_data <- ImputedData$new(data_df)
+
+# Perform Tomek links
+imputed_data$Tomek()
+
+# Get the indices of the Tomek links
+tomek_indices <- imputed_data$index$Tomek
+
+# Remove the Tomek links from the data
+data_df <- data_df[-tomek_indices, ]
+
+```
+
+```{r}
+# Data loading
+library(haven)
+
+# Load your dataset into a data frame (replace "your_dataset.csv" with the actual file path of your dataset)
+data <- read.csv("your_dataset.csv")
+data_raw<-data[-c(1)]
+
+data_raw$label_list2 <- as.factor(data$label_list2)
+```
+
+
+```{r}
+# Tomek Links
+
+#install.packages("recipes")
+#library(recipes)
+library(themis)
+
+colnames(data_raw)[ncol(data_raw)] <- 'class'
+train_tomek_sample <- recipe(~., data_raw) %>%
+  step_tomek(class,skip = TRUE) %>%
+  prep() %>%
+  bake(new_data = NULL)
+
+# Compare #instance of resulting data with that of original data
+#table(train_tomek_sample$class)
+#table(data_raw$class)
+
+# Save the dataset after Tomek Links (replace "resulting_dataset.csv" with the actual file name of your output dataset)
+write.csv(train_tomek_sample,"resulting_data.csv", row.names = TRUE)
+```
+
+
+```{r}
+# Near Miss - 1
+#install.packages("recipes")
+#library(recipes)
+library(themis)
+
+colnames(data_raw)[ncol(data_raw)] <- 'class'
+train_nearmiss_sample <- recipe(~., data_raw) %>%
+  step_nearmiss(class,under_ratio = 1) %>%
+  prep() %>%
+  bake(new_data = NULL)
+
+# Compare #instance of resulting data with that of original data
+#table(train_nearmiss_sample$class)
+#table(data_raw$class)
+
+# Save the dataset after Near Miss (replace "resulting_dataset.csv" with the actual file name of your output dataset)
+write.csv(train_nearmiss_sample,"/resulting_dataset.csv", row.names = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
