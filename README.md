@@ -6,3 +6,6 @@ The provided R Markdown files and Python scripts offer a comprehensive pipeline 
  * R Markdown files of applying PCA to cleaned TCGA data
  * R Markdown files of applying Tomek Links and Near Miss to address class imbalance
  * Alternative Python script for Tomek Links
+
+### Note
+Other TCGA data will be available soon in data folder.
