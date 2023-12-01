@@ -9,3 +9,4 @@ The provided R Markdown files and Python scripts offer a comprehensive pipeline 
 
 ### Dataset
 [Cleaned TCGA data is be available here](https://drive.google.com/file/d/1JyinIiJw0ayARSMlTIXVWQAK8ZS-6U7y/view?usp=sharing)
+Or [Hugging Face Dataset](https://huggingface.co/datasets/Gsatlwf/TCGA_Cancer)
